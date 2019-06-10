@@ -1,67 +1,58 @@
 - name: Deploy Jenkins Server from Latest Version in SIG
   hosts: localhost
   connection: local
-  taskes:
+  tasks:
     - name: Create Public IP Address
       azure_rm_publicipaddress:
-        resource_group: b002-networking
-        name: b002-jenkins01-pip
-        location: westus2
+        resource_group: "{{ networking_resource_group_name }}"
+        name: "{{ vm_name }}-pip"
         allocation_method: Static
-      register: public_ip_address
     - name: Create Network Interface
       azure_rm_networkinterface:
-        resource_gruop: b002-samplevms
-        name: b002-jenkins01-nic
+        resource_group: "{{ demo_resource_group_name }}"
+        name: "{{ vm_name }}-nic"
         virtual_network:
-          resource_group: b002-networking
-          name: b002-vnet
-        subnet_name: demoJenkins
-
-  azure_rm_virtualmachine:
-    resource_group: b002-samplevms
-    name: b002-jenkins01
-    location: westus2
-    vm_size: Standard_DS2_v2
-    admin_username: 
-
-    admin_password:
-    
-    allocated:
-    
-    
-    auth_source:
-    availability_set:
-    cert_validation_mode:
-    client_id:
-    cloud_environment:
-    
-    generalized:
-    image:
-    
-    managed_disk_type:
-
-    network_interfaces_names:
-    
-    os_disk_caching:
-    os_disk_name:
-    os_disk_size_gb:
-    os_type:
-    password:
-    public_ip_allocation_method:
-    remove_on_absent:
-    
-    secret:
-    short_hostname:
-    ssh_password_enabled:
-    ssh_public_keys:
-    started:
-    state:
-    subnet_name:
-    subscription_id:
-    tenant:
-    virtual_network_name:
-    virtual_network_resource_group:
-    
-    vm_size:
-    
+          resource_group: "{{ networking_resource_group_name }}"
+          name: "{{ virtual_network_name }}"
+        subnet: "{{ subnet_name }}"
+        ip_configurations:
+          - name: ipconfig1
+            primary: true
+            private_ip_allocation_method: Dynamic
+            public_ip_name: "{{ vm_name }}-pip"
+        create_with_security_group: false
+    - name: Create Availability Set
+      azure_rm_availabilityset:
+        resource_group: "{{ demo_resource_group_name }}"
+        name: "{{ vm_name }}-aas"
+        sku: Aligned
+        platform_fault_domain_count: 2
+        platform_update_domain_count: 5
+    - name: Create Jenkins Server
+      azure_rm_virtualmachine:
+        resource_group: "{{ demo_resource_group_name }}"
+        name: "{{ vm_name }}"
+        vm_size: Standard_DS2_v2
+        admin_username: "{{ vm_user }}"
+        admin_password: "{{ vm_password }}"
+        image:
+          resource_group: b002-sig-temprg
+          name: b003-ubunutu1804-jenkins-1560136983
+        managed_disk_type: StandardSSD_LRS
+        os_disk_name: "{{ vm_name }}-osd"
+        network_interface_names:
+          - name: "{{ vm_name }}-nic"              
+            resource_group: "{{ demo_resource_group_name }}"
+        ssh_password_enabled: true
+    - name: Install OMS Agent on Server
+      azure_rm_virtualmachineextension:
+        name: OMSExtension
+        resource_group: "{{ demo_resource_group_name }}"
+        virtual_machine_name: "{{ vm_name }}"
+        publisher: Microsoft.EnterpriseCloud.Monitoring
+        virtual_machine_extension_type: OmsAgentForLinux
+        type_handler_version: 1.7
+        settings:
+          workspaceId: "{{ workspace_id }}"
+        protected_settings:
+          workspaceKey: "{{ workspace_key }}"

@@ -5,9 +5,9 @@
             "subscription_id": "{{user `subscription_id`}}",
             "client_id": "{{user `client_id`}}",
             "client_secret": "{{user `client_secret`}}",
-            "build_resource_group_name": "{{user `resource_group_name`}}",
-            "managed_image_name": "b003-ubunutu1804-jenkins-{{timestamp}}",
-            "managed_image_resource_group_name": "{{user `resource_group_name`}}",
+            "build_resource_group_name": "{{user `temp_resource_group_name`}}",
+            "managed_image_name": "b003-ubuntu1804-{{timestamp}}",
+            "managed_image_resource_group_name": "{{user `temp_resource_group_name`}}",
             "image_publisher": "Canonical",
             "image_offer": "UbuntuServer",
             "image_sku": "18.04-LTS",
@@ -28,6 +28,8 @@
                 "sudo add-apt-repository ppa:openjdk-r/ppa -y",
                 "sudo apt install openjdk-8-jdk -y",
                 "sudo apt update",
+                "sudo wget -q -O - https://jenkins-ci.org/debian/jenkins-ci.org.key | sudo apt-key add -",
+                "sudo sh -c 'echo deb http://pkg.jenkins-ci.org/debian binary/ > /etc/apt/sources.list.d/jenkins.list'",
                 "sudo apt install jenkins -y",
                 "sudo systemctl start jenkins",
                 "sudo systemctl enable jenkins",
@@ -43,6 +45,16 @@
             "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
             "inline": [
                 "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"
+            ],
+            "inline_shebang": "/bin/sh -x",
+            "pause_after": "15s"
+        },
+        {
+            "type": "shell-local",
+            "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
+            "inline": [
+                "image_id=$(az image show --resource-group {{user `temp_resource_group_name`}} | jq -r '.[0].id')",
+                "az sig image-version create --resource-group {{user `gallery_resource_group_name`}} --gallery-name {{user `gallery_name`}} --gallery-image-definition {{user `image_name`}} --gallery-image-version {{user `image_version`}} --target-regions {{user `target_regions`}} --replicat-count 1 --managed-image $(image_id)"
             ],
             "inline_shebang": "/bin/sh -x"
         }

@@ -19,7 +19,7 @@
             "apiVersion": "2019-03-01",
             "location": "[parameters('location')]",
             "properties": {
-              "description": "This is my sample RHEL image.",
+              "description": "This is my sample Ubuntu image.",
               "osType": "Linux",
               "osState": "Generalized",
               "identifier": {
