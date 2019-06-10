@@ -1,0 +1,67 @@
+- name: Deploy Jenkins Server from Latest Version in SIG
+  hosts: localhost
+  connection: local
+  taskes:
+    - name: Create Public IP Address
+      azure_rm_publicipaddress:
+        resource_group: b002-networking
+        name: b002-jenkins01-pip
+        location: westus2
+        allocation_method: Static
+      register: public_ip_address
+    - name: Create Network Interface
+      azure_rm_networkinterface:
+        resource_gruop: b002-samplevms
+        name: b002-jenkins01-nic
+        virtual_network:
+          resource_group: b002-networking
+          name: b002-vnet
+        subnet_name: demoJenkins
+
+  azure_rm_virtualmachine:
+    resource_group: b002-samplevms
+    name: b002-jenkins01
+    location: westus2
+    vm_size: Standard_DS2_v2
+    admin_username: 
+
+    admin_password:
+    
+    allocated:
+    
+    
+    auth_source:
+    availability_set:
+    cert_validation_mode:
+    client_id:
+    cloud_environment:
+    
+    generalized:
+    image:
+    
+    managed_disk_type:
+
+    network_interfaces_names:
+    
+    os_disk_caching:
+    os_disk_name:
+    os_disk_size_gb:
+    os_type:
+    password:
+    public_ip_allocation_method:
+    remove_on_absent:
+    
+    secret:
+    short_hostname:
+    ssh_password_enabled:
+    ssh_public_keys:
+    started:
+    state:
+    subnet_name:
+    subscription_id:
+    tenant:
+    virtual_network_name:
+    virtual_network_resource_group:
+    
+    vm_size:
+    

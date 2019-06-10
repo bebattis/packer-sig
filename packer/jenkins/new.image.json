@@ -1,0 +1,50 @@
+{
+    "builders": [
+        {
+            "type": "azure-arm",
+            "subscription_id": "{{user `subscription_id`}}",
+            "client_id": "{{user `client_id`}}",
+            "client_secret": "{{user `client_secret`}}",
+            "build_resource_group_name": "{{user `resource_group_name`}}",
+            "managed_image_name": "b003-ubunutu1804-jenkins-{{timestamp}}",
+            "managed_image_resource_group_name": "{{user `resource_group_name`}}",
+            "image_publisher": "Canonical",
+            "image_offer": "UbuntuServer",
+            "image_sku": "18.04-LTS",
+            "image_version": "latest",
+            "os_type": "Linux",
+            "vm_size": "Standard_DS3_v2"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
+            "expect_disconnect": false,
+            "inline": [
+                "sudo apt-get update",
+                "sudo apt-get upgrade -y",
+                "sudo apt install software-properties-common apt-transport-https -y",
+                "sudo add-apt-repository ppa:openjdk-r/ppa -y",
+                "sudo apt install openjdk-8-jdk -y",
+                "sudo apt update",
+                "sudo apt install jenkins -y",
+                "sudo systemctl start jenkins",
+                "sudo systemctl enable jenkins",
+                "sudo ufw allow 8080",
+                "sudo ufw allow OpenSSH",
+                "sudo ufw enable"
+            ],
+            "inline_shebang": "/bin/sh -x",
+            "pause_after": "15s"
+        },
+        {
+            "type": "shell",
+            "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
+            "inline": [
+                "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"
+            ],
+            "inline_shebang": "/bin/sh -x"
+        }
+    ]
+}
